@@ -1,3 +1,5 @@
+#!/bin/sh /etc/rc.common
+
 #
 # Copyright (C) 2016 OpenWrt.org
 #
@@ -5,9 +7,7 @@
 # See /LICENSE for more information.
 #
 
-#!/bin/sh /etc/rc.common
-
-START=90
+START=70
 STOP=10
 
 USE_PROCD=1

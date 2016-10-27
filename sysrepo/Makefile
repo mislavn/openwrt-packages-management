@@ -13,10 +13,10 @@ PKG_LICENSE:=ASL-2.0
 PKG_MAINTAINER:=Mislav Novakovic <mislav.novakovic@sartura.hr>
 
 PKG_NAME:=sysrepo
-PKG_VERSION:=0.3.10
+PKG_VERSION:=0.4.10
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=80db90348e80a9e2960919d124afa647bf542bd0
+PKG_SOURCE_VERSION:=5dff88b0ebab13c06b710069d162e453ef550b88
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_SOURCE_VERSION).tar.bz2
 PKG_SOURCE_URL:=https://github.com/sysrepo/sysrepo.git
 PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_SOURCE_VERSION)
@@ -72,14 +72,8 @@ define Package/libsysrepo/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/libsysrepo.so $(1)/usr/lib/
 
-	$(INSTALL_DIR) $(1)/usr/lib
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/libsysrepo-engine.so $(1)/usr/lib/
-
 	$(INSTALL_DIR) $(1)/etc/sysrepo/yang/internal
 	$(INSTALL_CONF) $(PKG_BUILD_DIR)/yang/* $(1)/etc/sysrepo/yang/internal
-
-	$(INSTALL_DIR) $(1)/etc/sysrepo/data/internal
-	$(INSTALL_BIN) ./files/sysrepo-module-dependencies.xml $(1)/etc/sysrepo/data/internal
 endef
 
 define Package/sysrepod/install
@@ -100,10 +94,12 @@ define Package/sysrepocfg/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/sysrepocfg $(1)/bin/
 endef
 
-define Package/sysrepod/postinst
+define Package/libsysrepo/postinst
 #!/bin/sh
-mkdir /var/run
-exit 0
+	mkdir /var/run
+	mkdir -p $${IPKG_INSTROOT}/etc/sysrepo/data/internal
+	touch $${IPKG_INSTROOT}/etc/sysrepo/data/internal/sysrepo-module-dependencies.xml
+	exit 0
 endef
 
 $(eval $(call BuildPackage,libsysrepo))
