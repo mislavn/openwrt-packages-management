@@ -1,0 +1,108 @@
+From 2f30367f4357372d67aaf4c05f1b9c1c5d455449 Mon Sep 17 00:00:00 2001
+From: Mislav Novakovic <mislav.novakovic@sartura.hr>
+Date: Thu, 3 Nov 2016 15:23:25 +0100
+Subject: [PATCH] remove cmake section 'install all the required modules and
+ enable features'
+
+Signed-off-by: Mislav Novakovic <mislav.novakovic@sartura.hr>
+---
+ authd/CMakeLists.txt | 84 ----------------------------------------------------
+ 1 file changed, 84 deletions(-)
+
+diff --git a/authd/CMakeLists.txt b/authd/CMakeLists.txt
+index a5fbd5d..f40c4f6 100644
+--- a/authd/CMakeLists.txt
++++ b/authd/CMakeLists.txt
+@@ -69,89 +69,5 @@ if (NOT CHMOD_EXECUTABLE)
+     find_program(CHMOD_EXECUTABLE chmod)
+ endif()
+ 
+-# install all the required modules and enable features
+-install(CODE "set(AUTHD_MODULES ietf-system-keychain ietf-system)
+-    execute_process(COMMAND ${SYSREPOCTL_EXECUTABLE} -l RESULT_VARIABLE RET OUTPUT_VARIABLE INSTALLED_MODULES ERROR_VARIABLE OUT)
+-    if (RET)
+-        string(REPLACE \"\n\" \"\n  \" OUT \${OUT})
+-        message(FATAL_ERROR \"  Command sysrepoctl list failed:\n  \${OUT}\")
+-    endif()
+-
+-    foreach(AUTHD_MODULE IN LISTS AUTHD_MODULES)
+-        string(REGEX MATCH \"\${AUTHD_MODULE}[^\n]*\" INSTALLED_MODULE_LINE \"\${INSTALLED_MODULES}\")
+-        if (NOT INSTALLED_MODULE_LINE)
+-            message(STATUS \"Importing module \${AUTHD_MODULE} into sysrepo...\")
+-            execute_process(COMMAND ${SYSREPOCTL_EXECUTABLE} -i -g ${CMAKE_SOURCE_DIR}/../modules/\${AUTHD_MODULE}.yang -o root:root -p 600 RESULT_VARIABLE RET OUTPUT_VARIABLE OUT ERROR_VARIABLE OUT)
+-            if (RET)
+-                string(REPLACE \"\n\" \"\n  \" OUT \${OUT})
+-                message(FATAL_ERROR \"  Command sysrepoctl install failed:\n  \${OUT}\")
+-            endif()
+-
+-            if (\"\${AUTHD_MODULE}\" STREQUAL \"ietf-system\")
+-                execute_process(COMMAND ${SYSREPOCTL_EXECUTABLE} -m \${AUTHD_MODULE} -e authentication RESULT_VARIABLE RET OUTPUT_VARIABLE OUT ERROR_VARIABLE OUT)
+-                if (RET)
+-                    string(REPLACE \"\n\" \"\n  \" OUT \${OUT})
+-                    message(FATAL_ERROR \"  Command sysrepoctl enable feature failed:\n  \${OUT}\")
+-                endif()
+-
+-                execute_process(COMMAND ${SYSREPOCTL_EXECUTABLE} -m \${AUTHD_MODULE} -e local-users RESULT_VARIABLE RET OUTPUT_VARIABLE OUT ERROR_VARIABLE OUT)
+-                if (RET)
+-                    string(REPLACE \"\n\" \"\n  \" OUT \${OUT})
+-                    message(FATAL_ERROR \"  Command sysrepoctl enable feature failed:\n  \${OUT}\")
+-                endif()
+-
+-            endif()
+-            execute_process(COMMAND ${SYSREPOCTL_EXECUTABLE} -m \${AUTHD_MODULE} -t RESULT_VARIABLE RET OUTPUT_VARIABLE OUT ERROR_VARIABLE OUT)
+-            if (RET)
+-                string(REPLACE \"\n\" \"\n  \" OUT \${OUT})
+-                message(FATAL_ERROR \"  Command sysrepoctl init failed:\n  \${OUT}\")
+-            endif()
+-
+-        else()
+-            message(STATUS \"Module \${AUTHD_MODULE} already in sysrepo.\")
+-            if (\"\${AUTHD_MODULE}\" STREQUAL \"ietf-system\")
+-                if (NOT \"\${INSTALLED_MODULE_LINE}\" MATCHES \"authentication\")
+-                    execute_process(COMMAND ${SYSREPOCTL_EXECUTABLE} -m \${AUTHD_MODULE} -e authentication RESULT_VARIABLE RET OUTPUT_VARIABLE OUT ERROR_VARIABLE OUT)
+-                    if (RET)
+-                        string(REPLACE \"\n\" \"\n  \" OUT \${OUT})
+-                        message(FATAL_ERROR \"  Command sysrepoctl enable feature failed:\n  \${OUT}\")
+-                    endif()
+-
+-                endif()
+-                if (NOT \"\${INSTALLED_MODULE_LINE}\" MATCHES \"local-users\")
+-                    execute_process(COMMAND ${SYSREPOCTL_EXECUTABLE} -m \${AUTHD_MODULE} -e local-users RESULT_VARIABLE RET OUTPUT_VARIABLE OUT ERROR_VARIABLE OUT)
+-                    if (RET)
+-                        string(REPLACE \"\n\" \"\n  \" OUT \${OUT})
+-                        message(FATAL_ERROR \"  Command sysrepoctl enable feature failed:\n  \${OUT}\")
+-                    endif()
+-
+-                endif()
+-            endif()
+-        endif()
+-    endforeach()")
+-
+-# import stock OpenSSH RSA key
+-install(CODE "
+-    if (EXISTS ${AUTHD_KEYS_DIR}/ssh_host_rsa_key.pem)
+-        message(STATUS \"Stock OpenSSH RSA key already imported.\")
+-    elseif (EXISTS /etc/ssh/ssh_host_rsa_key AND EXISTS ${CHMOD_EXECUTABLE} AND EXISTS ${SYSREPOCFG_EXECUTABLE})
+-        message(STATUS \"Importing stock OpenSSH RSA key.\")
+-        file(READ /etc/ssh/ssh_host_rsa_key RSA_KEY)
+-        file(WRITE ${AUTHD_KEYS_DIR}/ssh_host_rsa_key.pem \${RSA_KEY})
+-        execute_process(COMMAND ${CHMOD_EXECUTABLE} go-rw ${AUTHD_KEYS_DIR}/ssh_host_rsa_key.pem)
+-        execute_process(COMMAND ${OPENSSL_EXECUTABLE} rsa -pubout -in ${AUTHD_KEYS_DIR}/ssh_host_rsa_key.pem -out ${AUTHD_KEYS_DIR}/ssh_host_rsa_key.pub.pem RESULT_VARIABLE RET OUTPUT_VARIABLE OUT ERROR_VARIABLE OUT)
+-        if (RET)
+-            string(REPLACE \"\n\" \"\n  \" OUT \${OUT})
+-            message(FATAL_ERROR \"  Command openssl generate public key failed:\n  \${OUT}\")
+-        endif()
+-        execute_process(COMMAND ${SYSREPOCFG_EXECUTABLE} -d startup -i ${CMAKE_SOURCE_DIR}/stock_key_config.xml ietf-system-keychain RESULT_VARIABLE RET OUTPUT_VARIABLE OUT ERROR_VARIABLE OUT)
+-        if (RET)
+-            string(REPLACE \"\n\" \"\n  \" OUT \${OUT})
+-            message(FATAL_ERROR \"  Command sysrepocfg import failed:\n  \${OUT}\")
+-        endif()
+-    else()
+-        message(STATUS \"No keys will be imported.\")
+-    endif()")
+-
+ # plugins should be installed into sysrepo plugins dir
+ install(TARGETS authd DESTINATION ${SR_PLUGINS_DIR})
+-- 
+2.10.1
+
