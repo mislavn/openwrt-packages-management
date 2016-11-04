@@ -1,0 +1,6 @@
+build:
+  image: "sartura/drone-openwrt-builder:arch"
+  commands:
+    - export FORCE_UNSAFE_CONFIGURE=1
+    - make defconfig
+    - make -j8
